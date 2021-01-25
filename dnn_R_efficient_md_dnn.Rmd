@@ -1,0 +1,263 @@
+---
+title: "Untitled"
+output: html_document
+---
+https://csgillespie.github.io/efficientR/introduction.html
+
+# 1. Introduction
+1.6.2 Benchmarking example
+```{r}
+library("microbenchmark")
+df = data.frame(v = 1:4, name = letters[1:4])
+microbenchmark(df[3, 2], df[3, "name"], df$name[3])
+# Unit: microseconds
+#          expr     min    lq  mean median    uq   max neval cld
+#      df[3, 2]   17.99 18.96 20.16  19.38 19.77 35.14   100   b
+# df[3, "name"]   17.97 19.13 21.45  19.64 20.15 74.00   100   b
+#    df$name[3]   12.48 13.81 15.81  14.48 15.14 67.24   100   a # BEST
+```
+1.6.3 Profiling
+
+```{r}
+#install.packages("profvis")
+library("profvis")
+profvis(expr = {
+
+  # Stage 1: load packages
+  # library("rnoaa") # not necessary as data pre-saved
+  library("ggplot2")
+
+  # Stage 2: load and process data
+  out = readRDS("extdata/out-ice.Rds")
+  df = dplyr::rbind_all(out, id = "Year")
+
+  # Stage 3: visualise output
+  ggplot(df, aes(long, lat, group = paste(group, Year))) +
+    geom_path(aes(colour = Year))
+  ggsave("figures/icesheet-test.png")
+}, interval = 0.01, prof_output = "ice-prof")
+```
+# 2 Efficient set-up
+```{r}
+#install.packages("benchmarkme")
+library("benchmarkme")
+```
+
+
+```{r}
+Sys.info()
+```
+# 3 Efficient programming
+
+```{r}
+library("compiler")
+library("memoise")
+```
+
+Top 5 tips for efficient programming
+
+- Be careful never to grow vectors.
+- Vectorise code whenever possible.
+- Use factors when appropriate.
+- Avoid unnecessary computation by caching variables.
+- Byte compile packages for an easy performance boost.
+
+```{r}
+method1 = function(n) {
+  vec = NULL # Or vec = c()
+  for (i in seq_len(n))
+    vec = c(vec, i)
+  vec
+} # slow
+
+method2 = function(n) {
+  vec = numeric(n)
+  for (i in seq_len(n))
+    vec[i] = i
+  vec
+} # middle
+
+method3 = function(n) seq_len(n) # very fast
+```
+
+
+```{r}
+n=10000
+microbenchmark(times = 100, unit = "s",
+               method1(n), method2(n), method3(n))
+```
+
+
+```{r}
+method3(100)
+```
+
+
+```{r}
+x = runif(n) + 1
+x
+```
+
+3.2.2 Vectorised code
+```{r}
+n=1000000
+x = runif(n) + 1
+```
+
+```{r}
+#install.packages("tictoc")
+library(tictoc)
+```
+
+Compare for loop and sum:
+```{r}
+# method 1
+tic()
+log_sum = 0
+for (i in 1:length(x))
+  log_sum = log_sum + log(x[i])
+toc() # 0.17
+```
+
+
+```{r}
+# method 2 (VERY fast)
+tic()
+log_sum = sum(log(x))
+toc() #0.06 (faster than 3 times)
+```
+Compare montecarlo for loop and sum
+
+```{r}
+monte_carlo = function(N) {
+  hits = 0
+  for (i in seq_len(N)) {
+    u1 = runif(1)
+    u2 = runif(1)
+    if (u1 ^ 2 > u2)
+      hits = hits + 1
+  }
+  return(hits / N)
+}
+```
+
+
+```{r}
+N = 500000
+system.time(monte_carlo(N)) # 2.58 s
+```
+
+```{r}
+tic()
+monte_carlo_vec = function(N) sum(runif(N)^2 > runif(N)) / N
+toc() # 0.02 s
+```
+```{r}
+install.packages("devtools")
+devtools::install_github("csgillespie/efficientR")
+```
+
+
+```{r}
+
+data("ex_mat", package = "efficient")
+```
+
+# https://www.r-bloggers.com/2016/01/strategies-to-speedup-r-code/
+
+```{r}
+# Create the data frame
+col1 <- runif (12^5, 0, 2)
+col2 <- rnorm (12^5, 0, 2)
+col3 <- rpois (12^5, 3)
+col4 <- rchisq (12^5, 2)
+df <- data.frame (col1, col2, col3, col4)
+df
+```
+
+
+```{r}
+# Original R code: Before vectorization and pre-allocation
+system.time({
+  for (i in 1:nrow(df)) { # for every row
+    if ((df[i, 'col1'] + df[i, 'col2'] + df[i, 'col3'] + df[i, 'col4']) > 4) { # check if > 4
+      df[i, 5] <- "greater_than_4" # assign 5th column
+    } else {
+      df[i, 5] <- "lesser_than_4" # assign 5th column
+    }
+  }
+})
+```
+Vectorise and pre-allocate data structures
+```{r}
+# after vectorization and pre-allocation
+output <- character (nrow(df)) # initialize output vector
+system.time({
+  for (i in 1:nrow(df)) {
+    if ((df[i, 'col1'] + df[i, 'col2'] + df[i, 'col3'] + df[i, 'col4']) > 4) {
+      output[i] <- "greater_than_4"
+    } else {
+      output[i] <- "lesser_than_4"
+    }
+  }
+df$output})
+```
+
+
+```{r}
+#install.packages("ggplot2movies")
+library("profvis")
+library(ggplot2movies)
+profvis({
+  data(movies, package = "ggplot2movies") # Load data
+  movies = movies[movies$Comedy == 1,]
+  plot(movies$year, movies$rating)
+  model = loess(rating ~ year, data = movies) # loess regression line
+  j = order(movies$year)
+  lines(movies$year[j], model$fitted[j]) # Add line to the plot
+})
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+```{r}
+```
+

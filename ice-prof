@@ -1,0 +1,14 @@
+memory profiling: GC profiling: line profiling: sample.interval=10000
+:1204752:1855173:76546120:0:"f" ".rs.callAs" "Rprof" "profvis" 
+#File 1: <expr>
+:1205047:1937418:76581904:14:"readRDS" 1#8 "profvis" 
+:1205277:1944008:76626424:18:"makeRestartList" "withRestarts" "message" "value[[3]]" "tryCatchOne" "tryCatchList" "tryCatchList" "tryCatch" "profvis" 
+:1205277:1944008:76626424:0:"makeRestartList" "withRestarts" "message" "value[[3]]" "tryCatchOne" "tryCatchList" "tryCatchList" "tryCatch" "profvis" 
+:1205277:1944008:76626424:0:"makeRestartList" "withRestarts" "message" "value[[3]]" "tryCatchOne" "tryCatchList" "tryCatchList" "tryCatch" "profvis" 
+:1205277:1944008:76626424:0:"makeRestartList" "withRestarts" "message" "value[[3]]" "tryCatchOne" "tryCatchList" "tryCatchList" "tryCatch" "profvis" 
+:1205277:1944008:76626424:0:"makeRestartList" "withRestarts" "message" "value[[3]]" "tryCatchOne" "tryCatchList" "tryCatchList" "tryCatch" "profvis" 
+:1205277:1944008:76626424:0:"makeRestartList" "withRestarts" "message" "value[[3]]" "tryCatchOne" "tryCatchList" "tryCatchList" "tryCatch" "profvis" 
+:1205277:1944008:76626424:0:"makeRestartList" "withRestarts" "message" "value[[3]]" "tryCatchOne" "tryCatchList" "tryCatchList" "tryCatch" "profvis" 
+:1205277:1944008:76626424:0:"makeRestartList" "withRestarts" "message" "value[[3]]" "tryCatchOne" "tryCatchList" "tryCatchList" "tryCatch" "profvis" 
+:1205277:1944008:76626424:0:"makeRestartList" "withRestarts" "message" "value[[3]]" "tryCatchOne" "tryCatchList" "tryCatchList" "tryCatch" "profvis" 
+:1205347:1944008:76640032:13:".Call" "profvis" 
